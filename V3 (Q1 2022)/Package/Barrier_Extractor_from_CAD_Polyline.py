@@ -1,5 +1,3 @@
-import ezdxf
-import os
 from tkinter import Tk
 import tkinter as tk
 import tkinter.messagebox

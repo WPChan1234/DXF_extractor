@@ -1,5 +1,14 @@
 
 from tkinter import *
+from tkinter import Tk
+# import tkinter as tk
+# from tkinter.filedialog import askopenfilename
+# from tkinter.filedialog import asksaveasfile
+# import ezdxf
+# import tkinter.messagebox
+# import collections
+# from Utilities import round_half_up
+
 
 
 class Checkbar(Frame):
@@ -14,6 +23,31 @@ class Checkbar(Frame):
    def state(self):
       return map((lambda var: var.get()), self.vars)
 
+
+def allstates():
+   State = list(Receiver.state())
+   print(State)
+   if State[0] == 1:
+      import DXF_2_REC_1_NSR_per_Column
+   if State[1] == 1:
+      import DXF_2_REC_1NSR_per_floor
+   if State[2] == 1:
+      import NSR_rename
+   State=list(DXF_extraction.state())
+   print(State)
+   if State[0] == 1:
+      import Barrier_Extractor_from_CAD_Polyline
+   if State[1] == 1:
+      import Contour_extractor_from_Polyline
+   if State[2] == 1:
+      import Road_noise_segement_file_generator_v2
+   to_dxf = list(Excel_to_DXF.state())
+   if to_dxf[0]==1:
+       import Result_Map_on_CAD
+   if to_dxf[1] == 1:
+      import Mit_Map_on_CAD
+
+
 if __name__ == '__main__':
    root = Tk()
    root.geometry('600x200')
@@ -22,7 +56,7 @@ if __name__ == '__main__':
    R = Label(root, text="Receiver file extraction and related tools")
    R.pack()
 
-   Receiver = Checkbar(root, ['.rec(1NSR per column (Default)','.rec(1NSR per floor)', 'NSR rename'])
+   Receiver = Checkbar(root, ['.rec(1NSR per column (Default)','.rec(1NSR per floor)(ss)', 'NSR rename'])
    Receiver.pack(side=TOP, fill=X)
 
    Receiver.config(relief=GROOVE, bd=2)
@@ -47,34 +81,6 @@ if __name__ == '__main__':
 
 
 
-   def allstates():
-
-      State = list(Receiver.state())
-      print(State)
-      if State[0] == 1:
-         import DXF_2_REC_1_NSR_per_Column
-      if State[1] == 1:
-         import DXF_2_REC_1NSR_per_floor
-      if State[2] == 1:
-         import NSR_rename
-
-      State=list(DXF_extraction.state())
-      print(State)
-
-
-      if State[0] == 1:
-         import Barrier_Extractor_from_CAD_Polyline
-      if State[1] == 1:
-         import Contour_extractor_from_Polyline
-      if State[2] == 1:
-         import Road_noise_segement_file_generator_v2
-
-      to_dxf = list(Excel_to_DXF.state())
-
-      if to_dxf[0]==1:
-          import Result_Map_on_CAD
-      if to_dxf[1] == 1:
-         import Mit_Map_on_CAD
 
 
 
