@@ -1,8 +1,11 @@
 from tkinter.filedialog import askopenfilename
+from tkinter import filedialog, Tk
 from tkinter.filedialog import asksaveasfile
 import ezdxf
 import tkinter.messagebox
 import collections
+import pandas as pd
+import openpyxl
 
 ## Road segment extractor for air
 ## Flow ID can be with characters
@@ -42,6 +45,7 @@ Duplicated_SEG = [item for item, count in collections.Counter(SegList).items() i
 tkinter.messagebox.showinfo("Segment Duplicate Check","Duplicated SEG_ID "
                                                   "(Gd to go if no duplicated SEG_ID) = "+ str(Duplicated_SEG))
 
+Content=[]
 
 # SEG file formation#
 for insert in msp.query('INSERT'):
@@ -57,69 +61,59 @@ for insert in msp.query('INSERT'):
                 E_OPXY = List[5][1].replace('"', '')
                 S_Z = List[1][1]
                 E_Z = List[2][1]
-                Speed_kph=List[5][1]
-                Rd_Width=float(List[8][1])
-                Half_RD_Wid=str(round((Rd_Width/2),1))
+                Road_Type=List[6][1]
+                Rd_Width=float(List[7][1])
                 FlowID=List[3][1]
 
-                ## LNRS
-                if List[6][1] =="Y":
-                  LNRS = str(2.0)
-                else: LNRS=str(1.0)
-
-                First_eff_bar ="{:>8}".format("-"+str(round(float(List[7][1]),1)))
-
-                while S_OPXY == '##################': ## error message for corrupted SEG block
-                    tkinter.messagebox.showinfo("Error","SEG block corrupted, rebuild coor. attribute")
-                    break
-
-                    exit
+                # ## LNRS
+                # if List[6][1] =="Y":
+                #   LNRS = str(2.0)
+                # else: LNRS=str(1.0)
+                #
+                # First_eff_bar ="{:>8}".format("-"+str(round(float(List[7][1]),1)))
+                #
+                # while S_OPXY == '##################': ## error message for corrupted SEG block
+                #     tkinter.messagebox.showinfo("Error","SEG block corrupted, rebuild coor. attribute")
+                #     break
+                #
+                #     exit
 
                 S_OPX = str(round(float(S_OPXY.split(",")[0]),1))
                 S_OPY = str(round(float(S_OPXY.split(",")[1]),1))
                 E_OPX = str(round(float(E_OPXY.split(",")[0]),1))
                 E_OPY = str(round(float(E_OPXY.split(",")[1]),1))
 
+                Current_segment = {"SegID": SEG_ID,
+
+                               "S_X": S_OPX,
+                               "S_Y": S_OPY,
+                                "S_Z":S_Z ,
+                               "E_X": E_OPX,
+                               "E_Y": E_OPY,
+                               "E_Z": E_Z,
+                               "Rd_Width": Rd_Width,
+                               "Rd_Type":Road_Type,
+                               "Flow_ID":FlowID
 
 
-                ListFile.append(SEG_ID + ","+ S_OPX + ","+ S_OPY + ","+ S_Z+ ","+ E_OPX + ","+ E_OPY + ","+ E_Z+  ","+Speed_kph+","+Half_RD_Wid)
+                               }
 
+                Content.append(Current_segment)
 
-                SegFile.append("TEXT")
-                SegFile.append(SEG_ID)
+Df_NSR = pd.DataFrame(Content)
 
-                SegLine1="UFN="+FlowID+"CAT=     1.0"+"RSX="+S_OPX+"RSY="+S_OPY+"HCS=    "+S_Z+"HCG=     0.0"
-                SegLine2="SEG=     1.0NCY=     1.0WCY=     "+ Half_RD_Wid + "DCY=     0.0HCY=     0.0"
-                SegLine3 = "RST=     "+LNRS+"RTD=     1.0GND=     0.0NBA="+First_eff_bar+"RCT=     0.0"
-                SegLine4 = "REX=" + E_OPX + "REY=" + E_OPY + "HCE=    " + E_Z + "SEND      .0"
+root = Tk()  # this is to close the dialogue box later
+try:
+    # with block automatically closes file
+    with filedialog.asksaveasfile(mode='w', defaultextension=".xlsx", title='Save Rec Detail file as',
+                                  initialfile="Segment info list.xlsx") as file:
+        Df_NSR.to_excel(file.name)
+except AttributeError:
+    # if user cancels save, filedialog returns None rather than a file object, and the 'with' will raise an error
+    print("The user cancelled save")
 
-                SegFile.append(SegLine1)
-                SegFile.append(SegLine2)
-                SegFile.append(SegLine3)
-                SegFile.append(SegLine4)
-                SegFile.append("")
+root.destroy()
 
-SegFile.append("RETN     0.0")
+tkinter.messagebox.showinfo('End', 'Segment successfully exported in .xlsx file.')
 
-print(ListFile)
-
-
-
-
-with open('ListFile.Rec', 'w') as f:
-    for item in ListFile:
-        f.write("%s\n" % item)
-
-f = asksaveasfile(mode='w', defaultextension=".txt",title='Save Rec Detail file as',initialfile="Segment info list.txt")
-for item in ListFile:
-    f.write("%s\n" % item)
-f.close()
-
-with open('SegFile.seg', 'w') as f:
-    for item in SegFile:
-        f.write("%s\n" % item)
-
-f = asksaveasfile(mode='w', defaultextension=".txt",title='Save Noisemap Seg file as',initialfile="Segment.seg")
-for item in SegFile:
-    f.write("%s\n" % item)
-f.close()
+# Df_NSR.to_excel(f)
