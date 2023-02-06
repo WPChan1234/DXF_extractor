@@ -34,3 +34,10 @@ Df_ROP=Df_ROP[['NSR','FL', 'SPL']]
 
 Df_ROP= Df_ROP.astype({'NSR': str, 'FL': int,'SPL': float}, errors = 'ignore').dropna()
 print(Df_ROP)
+
+Df_MaxROP=Df_ROP.groupby('NSR').max()
+# Df_MaxROP=Df_MaxROP[['NSR', 'SPL']]
+print(Df_MaxROP)
+
+Df_ROP.to_csv('C:/Users/chanw/PycharmProjects/DXF_extractor/output/ROP_Summary.csv')
+Df_MaxROP.to_csv('C:/Users/chanw/PycharmProjects/DXF_extractor/output/out.csv')
