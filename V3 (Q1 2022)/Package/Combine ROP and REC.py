@@ -170,7 +170,7 @@ def ROP_to_DF(File_Path):
     df['RECEIVER']=df['RECEIVER'].astype(str)
     df.replace(r"^ +| +$", r"", regex=True)
     # Changing the column name
-    df.rename(columns={'All': 'Total SPL'}, inplace=True)
+    df.rename(columns={'All': 'Total_SPL'}, inplace=True)
 
     print(df)
     # get the output file location from the user
@@ -185,6 +185,8 @@ def ROP_to_DF(File_Path):
     print(df.dtypes)
 
     return(df)
+
+
 
 
 
@@ -204,7 +206,7 @@ receiver_df = pd.concat([receiver_df]*len(expanded_df), ignore_index=True)
 receiver_df = pd.concat([receiver_df, expanded_df], axis=1)
 receiver_df.dropna(subset=['Fl'], inplace=True)
 receiver_df['Fl']=receiver_df['Fl'].astype(int)
-receiver_df["z"] = receiver_df["Fl"] * receiver_df["HPF"] +receiver_df["HRA"]
+receiver_df["z"] = round(receiver_df["Fl"] * receiver_df["HPF"] +receiver_df["HRA"],1)
 print(receiver_df)
 
 # Save the dataframe to a text file (For checking only)
@@ -214,10 +216,31 @@ receiver_df.to_csv('example.txt', sep='\t', index=False)
 rop_df = ROP_to_DF(rop_file_path)
 merged_df = pd.merge(receiver_df, rop_df, left_on=['NSR_ID','Fl'], right_on=['RECEIVER','Fl'])
 # Print the merged dataframe
+merged_df = merged_df.drop_duplicates()
 print(merged_df)
 
 # Retaining only specific columns by name
-columns_to_retain = ['NSR_ID','HRA','HPF','RPT','Fl','OPX','OPY','z','Total SPL']
+columns_to_retain = ['NSR_ID','HRA','HPF','RPT','Fl','OPX','OPY','z','Total_SPL']
 df_Rec_ROP = merged_df[columns_to_retain]
 
+
+# Sort the DataFrame by 'Column1' in ascending order and then by 'Column3' in descending order
+df_Rec_ROP = df_Rec_ROP.sort_values(by=['NSR_ID', 'z'], ascending=[True, True])
+
+
 print(df_Rec_ROP)
+
+window = tk.Tk()
+window.withdraw()
+
+# Open the file dialog to select the save location
+file_path = filedialog.asksaveasfilename(defaultextension=".txt",
+                                         filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
+
+if file_path:
+    # Save the DataFrame to the selected location
+    df_Rec_ROP.to_csv(file_path, sep='\t', index=False)
+    print("DataFrame saved successfully.")
+
+# Run the Tkinter event loop
+window.mainloop()
