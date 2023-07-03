@@ -141,6 +141,7 @@ def RecFile_toDF(File_Path):
 
     # print(DF_NSR)
     print(DF_NSR)
+
     return(DF_NSR)
 
     # DFtoVector(DF_NSR, 'NSR_Python')
@@ -183,7 +184,7 @@ def ROP_to_DF(File_Path):
     # # print a message indicating the output file location
     # print("Output file saved to:", output_file)
     print(df.dtypes)
-
+    df.to_csv("ROP", sep='\t', index=False)
     return(df)
 
 
@@ -200,10 +201,19 @@ rop_file_path = filedialog.askopenfilename(title="Select ROP File")
 # Step 2: Read the Receiver file and expand the 'No. of RPT' column
 receiver_df = RecFile_toDF(receiver_file_path)
 
-expanded_df = pd.concat([pd.DataFrame({'Fl': range(n+1)}) for n in receiver_df['RPT']], ignore_index=True)
-
-receiver_df = pd.concat([receiver_df]*len(expanded_df), ignore_index=True)
-receiver_df = pd.concat([receiver_df, expanded_df], axis=1)
+# Expand value to list
+def expand_list(value):
+    return list(range(value))
+receiver_df['Fl'] = receiver_df['RPT'].apply(expand_list)
+receiver_df = receiver_df.explode('Fl')
+receiver_df= receiver_df.reset_index(drop=True)
+print(receiver_df)
+# expanded_df = pd.concat([pd.DataFrame({'Fl': range(n)}) for n in receiver_df['RPT']], ignore_index=True) # problem in this line, should use something better than concat to expand the lines
+#
+# receiver_df = pd.concat([receiver_df]*len(expanded_df), ignore_index=True)
+# receiver_df = pd.concat([receiver_df, expanded_df], axis=1)
+receiver_df  = receiver_df.sort_values(by=['NSR_ID', 'Fl'], ascending=[True, True])
+receiver_df.to_csv("NSR", sep='\t', index=False)
 receiver_df.dropna(subset=['Fl'], inplace=True)
 receiver_df['Fl']=receiver_df['Fl'].astype(int)
 receiver_df["z"] = round(receiver_df["Fl"] * receiver_df["HPF"] +receiver_df["HRA"],1)
@@ -216,7 +226,7 @@ receiver_df.to_csv('example.txt', sep='\t', index=False)
 rop_df = ROP_to_DF(rop_file_path)
 merged_df = pd.merge(receiver_df, rop_df, left_on=['NSR_ID','Fl'], right_on=['RECEIVER','Fl'])
 # Print the merged dataframe
-merged_df = merged_df.drop_duplicates()
+# merged_df = merged_df.drop_duplicates()
 print(merged_df)
 
 # Retaining only specific columns by name
